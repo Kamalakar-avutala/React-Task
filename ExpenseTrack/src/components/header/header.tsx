@@ -33,7 +33,7 @@ const Header = () => {
       <nav className="navbar navbar-expand-lg navbar-custom">
         <div className="container-fluid">
           <a className="navbar-brand" href="#">
-            Navbar
+            Expense Track
           </a>
           <button
             className="navbar-toggler"
@@ -49,7 +49,7 @@ const Header = () => {
           <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div className="navbar-nav align-items-center justify-content-between w-100 pe-4">
               <a className="nav-link active" aria-current="page" href="#">
-                Home
+                {/* Home */}
               </a>
               <button
                 className="bg-transparent p-0 border-0"
