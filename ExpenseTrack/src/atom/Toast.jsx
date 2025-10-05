@@ -10,8 +10,14 @@ const CustomToast = React.forwardRef((props, ref) => {
   // Expose custom show method with default timing
   useImperativeHandle(ref, () => ({
     show: (options) => {
+      if (!options.severity || !options.summary) {
+        console.warn('Toast requires severity and summary properties');
+        return;
+      }
       toastRef.current.show({
-        ...options,
+        severity: options.severity,
+        summary: options.summary,
+        detail: options.detail,
         life: options.life || DEFAULT_LIFE,
       });
     }

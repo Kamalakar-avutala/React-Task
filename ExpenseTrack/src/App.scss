@@ -12,6 +12,38 @@ body {
   }
 }
 
-.navbar-custom {
+.navbar-custom,
+.sidenav-custom {
   background-color: #e3f2fd;
+}
+
+td {
+  button {
+    padding:0 !important;
+    background: transparent !important;
+  }
+}
+
+.p-datatable-emptymessage td {
+  text-align: center;
+}
+
+.p-menu-overlay {
+  padding:0;
+}
+
+.p-menu-list {
+  margin-bottom: 0;
+  padding-left: 0;
+
+  .p-menuitem-link {
+    text-decoration: none;
+  }
+}
+
+.user-profile {
+  button {
+    flex-direction: row-reverse;
+    gap:8px;
+  }
 }

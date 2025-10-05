@@ -1,56 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { InputText } from "primereact/inputtext";
-import { InputNumber } from "primereact/inputnumber";
-import { Dropdown } from "primereact/dropdown";
-import { Calendar } from "primereact/calendar";
+import React, { useState } from "react";
+import Calendar from "../../molecules/CalenderField";
+import InputText from "../../molecules/TextInputField";
+import Dropdown from "../../molecules/DropdownField";
+import Button from "../../atom/Button";
 import { useDispatch } from "react-redux";
-import { addExpences, updateExpense } from "../../redux/expensesSlice";
+import { addExpenses } from "../../redux/expensesSlice";
 
-const ExpenseForm = ({ editingExpense, onCancel }) => {
-  const [form, setForm] = useState({
-    title: "",
-    amount: null,
-    category: null,
-    date: null,
-  });
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (editingExpense) {
-      setForm(editingExpense);
-    }
-  }, [editingExpense]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleValueChange = (value, name) => {
-    setForm({ ...form, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Convert date to ISO string if date exists
-    const expenseData = {
-      ...form,
-      date: form.date ? form.date.toISOString().split("T")[0] : null,
-    };
-
-    if (editingExpense) {
-      dispatch(updateExpense(expenseData));
-    } else {
-      dispatch(addExpences(expenseData));
-    }
-
-    setForm({ title: "", amount: null, category: null, date: null });
-    onCancel();
-  };
-
-  const categories = [
+const categories = [
   { name: "Food", code: "FD" },
   { name: "Transport", code: "TS" },
   { name: "Utilities", code: "UT" },
@@ -69,57 +25,96 @@ const ExpenseForm = ({ editingExpense, onCancel }) => {
   { name: "Miscellaneous", code: "MX" },
 ];
 
+const ExpenseForm = () => {
+  const dispatch = useDispatch();
+
+  const [form, setForm] = useState({
+    title: "",
+    amount: "",
+    category: "",
+    date: null,
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prevForm) => ({
+      ...prevForm,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // ✅ Safely handle date and category formatting
+    const formattedExpense = {
+      ...form,
+      id: Date.now().toString(),
+      date: form.date instanceof Date ? form.date.toISOString() : null,
+      category: form.category || "MX", // default to "Miscellaneous"
+    };
+
+    console.log("DISPATCHING EXPENSE:", formattedExpense);
+    dispatch(addExpenses(formattedExpense));
+
+    setForm({
+      title: "",
+      amount: "",
+      category: "",
+      date: null,
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="d-flex flex-column gap-2 mb-3">
-        <label htmlFor="title">Title</label>
-        <InputText
-          id="title"
-          name="title"
-          value={form.title}
-          onChange={handleInputChange}
-        />
-      </div>
+    <form onSubmit={handleSubmit} className="row row-gap-4 mb-4">
+      <InputText
+        id="title"
+        name="title"
+        label="Title"
+        value={form.title}
+        onChange={handleInputChange}
+        className="col-12 col-md-6"
+      />
 
-      <div className="d-flex flex-column gap-2 mb-3">
-        <label htmlFor="amount">Amount</label>
-        <InputNumber
-          id="amount"
-          value={form.amount}
-          onValueChange={(e) => handleValueChange(e.value, "amount")}
-        />
-      </div>
+      <InputText
+        id="amount"
+        name="amount"
+        label="Amount"
+        type="number"
+        value={form.amount}
+        onChange={handleInputChange}
+        className="col-12 col-md-6"
+      />
 
-      <div className="d-flex flex-column gap-2 mb-3">
-        <label htmlFor="category">Category</label>
-        <Dropdown
-          id="category"
-          value={form.category}
-          options={categories}
-          optionLabel="name"
-          onChange={(e) => handleValueChange(e.value, "category")}
-          placeholder="Select a category"
-        />
-      </div>
+      <Dropdown
+        id="category"
+        name="category"
+        label="Category"
+        value={form.category}
+        options={categories}
+        optionLabel="name"
+        optionValue="code"
+        onChange={(e) => handleInputChange({ target: { name: "category", value: e.value } })}
+        placeholder="Select a category"
+        checkmark={false}
+        className="col-12 col-md-6"
+      />
 
-      <div className="d-flex flex-column gap-2 mb-3">
-        <label htmlFor="date">Date</label>
-        <Calendar
-          id="date"
-          value={form.date}
-          onChange={(e) => handleValueChange(e.value, "date")}
-          dateFormat="yy-mm-dd"
-        />
-      </div>
+      <Calendar
+        id="date"
+        name="date"
+        label="Date"
+        value={form.date}
+        onChange={handleInputChange}
+        dateFormat="yy-mm-dd"
+        className="col-12 col-md-6"
+      />
 
-      <button type="submit" className="btn btn-secondary">
-        {editingExpense ? "Update" : "Add"} Expense
-      </button>
-      {editingExpense && (
-        <button type="button" onClick={onCancel}>
-          Cancel
-        </button>
-      )}
+      <div className="d-flex justify-content-end">
+        <Button type="submit" className="col-2">
+          Add Expense
+        </Button>
+      </div>
     </form>
   );
 };
