@@ -4,10 +4,10 @@ import Button from "../../atom/Button";
 import PasswordInput from "../../molecules/PasswordInput";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase";
-import { db } from "../../firebase";
+import { auth, db } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import CustomToast from "../../atom/Toast";
+import { useAuth } from "../../routes/Authenticator"; // ✅ Import Auth Context
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -15,8 +15,10 @@ function Login() {
   const [errors, setErrors] = useState({});
 
   const toast = useRef(null);
-
   const navigate = useNavigate();
+
+  const { setIsAuthenticated } = useAuth(); // ✅ Get the context setter
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
@@ -24,14 +26,14 @@ function Login() {
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Validate password
     if (!password || password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+      newErrors.password = "Password must be at least 8 characters long";
     } else if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
-      newErrors.password = 'Password must contain both letters and numbers';
+      newErrors.password = "Password must contain both letters and numbers";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -45,36 +47,32 @@ function Login() {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
 
-      // store JWT token in localStorage
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", token); // ✅ Store token for protected routes
 
-      // Fetch user details from Firestore
+      // Fetch user details
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
+        // ✅ Update authentication context
+        setIsAuthenticated(true);
 
         toast.current.show({
           severity: "success",
           summary: "Success",
-          detail: "Login successful!"
+          detail: "Login successful!",
         });
 
-        // Redirect to dashboard after successful login
-        navigate("/dashboard");
+        // ✅ Navigate to dashboard with replace to block back button
+        navigate("/dashboard", { replace: true });
       } else {
         toast.current.show({
           severity: "error",
           summary: "Error",
-          detail: "User data not found"
+          detail: "User data not found",
         });
       }
     } catch (error) {
@@ -82,7 +80,7 @@ function Login() {
       toast.current.show({
         severity: "error",
         summary: "Error",
-        detail: error.message || "Login failed"
+        detail: error.message || "Login failed",
       });
     }
   };
@@ -103,7 +101,7 @@ function Login() {
                 placeholder="Email"
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setErrors({ ...errors, email: '' });
+                  setErrors({ ...errors, email: "" });
                 }}
                 error={errors.email ? { message: errors.email } : null}
                 required
@@ -115,17 +113,14 @@ function Login() {
                 placeholder="Enter your password"
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setErrors({ ...errors, password: '' });
+                  setErrors({ ...errors, password: "" });
                 }}
                 error={errors.password ? { message: errors.password } : null}
                 toggleMask={true}
                 feedback={false}
                 required
               />
-              <Button
-                type="submit"
-                className="mt-3 mb-3"
-              >
+              <Button type="submit" className="mt-3 mb-3">
                 Submit
               </Button>
             </form>

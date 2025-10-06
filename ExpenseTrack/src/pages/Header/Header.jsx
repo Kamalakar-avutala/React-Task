@@ -5,12 +5,15 @@ import { auth } from "../../firebase";
 import CustomToast from "../../atom/Toast";
 import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
+import { useAuth } from "../../routes/Authenticator";
 
 const Header = () => {
   const navigate = useNavigate();
   const toast = useRef(null);
   const menu = useRef(null);
   const [userName, setUserName] = useState("");
+
+  const { setIsAuthenticated } = useAuth(); 
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -35,27 +38,22 @@ const Header = () => {
       command: () => handleLogout()
     }
   ];
+
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      localStorage.removeItem("token");
-      navigate("/Login", { replace: true });
-
-      // toast.current.show({
-      //   servity: "success",
-      //   summary: "Success",
-      //   detail: "LogOut successfull!.",
-      // });
+      await signOut(auth); // Firebase logout
+      localStorage.removeItem("token"); // Clear token
+      setIsAuthenticated(false);        // Set auth false
+      navigate("/login", { replace: true }); // Redirect
 
     } catch (error) {
-      console.error("Logout Error:");
+      console.error("Logout Error:", error);
     }
   };
 
   return (
     <>
       <CustomToast ref={toast} />
-
       <nav className="navbar navbar-expand-lg bg-dark border-bottom">
         <div className="container-fluid">
           <a className="navbar-brand text-white" href="#">
@@ -81,7 +79,7 @@ const Header = () => {
                   className="p-button-text bg-transparent text-white"
                   onClick={(e) => menu.current?.toggle(e)}
                 />
-                 <Menu model={items} popup ref={menu} />
+                <Menu model={items} popup ref={menu} />
               </div>
             </div>
           </div>

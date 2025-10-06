@@ -1,8 +1,7 @@
 import React, { useImperativeHandle, useRef } from "react";
 import { Toast } from "primereact/toast";
 
-// Default duration in milliseconds
-const DEFAULT_LIFE = 3000;
+const VITE_TOAST_DEFAULT_LIFE = import.meta.env.VITE_TOAST_DEFAULT_LIFE;
 
 const CustomToast = React.forwardRef((props, ref) => {
   const toastRef = useRef(null);
@@ -18,7 +17,7 @@ const CustomToast = React.forwardRef((props, ref) => {
         severity: options.severity,
         summary: options.summary,
         detail: options.detail,
-        life: options.life || DEFAULT_LIFE,
+        life: options.life || VITE_TOAST_DEFAULT_LIFE,
       });
     }
   }));
