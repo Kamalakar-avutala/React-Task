@@ -21,12 +21,11 @@ const Input = React.forwardRef(({
         className={`${inputClassName} w-100`}
         {...props}
       />
-      {error && <small className="p-error d-inline-block">{error.message}</small>}
+      {error?.message && <small className="p-error d-inline-block">{error.message}</small>}
     </div>
   );
 });
 
 Input.displayName = 'Input';
-
 
 export default Input;

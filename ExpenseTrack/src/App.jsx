@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'primeicons/primeicons.css';
 import {Provider} from 'react-redux';
 import store from "./redux/store";
-import Layout from './components/Layout/Layout';
+import Layout from './pages/Layout/Layout';
 import { AuthProvider } from './routes/Authenticator';
 
 function App() {

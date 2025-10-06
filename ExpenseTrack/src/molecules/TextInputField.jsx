@@ -1,9 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import TextInput from '../atom/Input/Input';  
+import TextInput from '../atom/Input/Input';
 
-
-const TextInputField = ({ id,name, type, label, value, onChange, placeholder, required = false, className = '', error }) => {
+const TextInputField = React.forwardRef(({
+  id,
+  name,
+  type,
+  label,
+  placeholder,
+  required = false,
+  className = '',
+  error,
+  ...rest
+}, ref) => {
   return (
     <div className={`labeled-input d-inline-flex flex-column ${className}`}>
       <label htmlFor={id} className="mb-2">
@@ -13,29 +22,27 @@ const TextInputField = ({ id,name, type, label, value, onChange, placeholder, re
       <TextInput
         id={id}
         name={name}
-        value={value}
-        onChange={onChange}
+        type={type}
         placeholder={placeholder}
         aria-required={required}
-        type={type}
         error={error}
+        ref={ref}          // <-- forward the ref
+        {...rest}          // <-- spread other props like onChange, onBlur, value from register()
       />
     </div>
   );
-};
+});
 
 TextInputField.propTypes = {
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   label: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   required: PropTypes.bool,
   className: PropTypes.string,
   error: PropTypes.shape({
     message: PropTypes.string
-  })
+  }),
 };
 
 export default TextInputField;
