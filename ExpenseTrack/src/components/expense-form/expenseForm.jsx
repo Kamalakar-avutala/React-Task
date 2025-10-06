@@ -4,7 +4,9 @@ import InputText from "../../molecules/TextInputField";
 import Dropdown from "../../molecules/DropdownField";
 import Button from "../../atom/Button";
 import { useDispatch } from "react-redux";
-import { addExpenses } from "../../redux/expensesSlice";
+import { addExpenseRequest } from "../../redux/expensesSlice";
+import { Toast } from "primereact/toast";
+import { useRef } from "react";
 
 const categories = [
   { name: "Food", code: "FD" },
@@ -27,6 +29,7 @@ const categories = [
 
 const ExpenseForm = () => {
   const dispatch = useDispatch();
+  const toast = useRef(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -46,17 +49,20 @@ const ExpenseForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ Safely handle date and category formatting
     const formattedExpense = {
       ...form,
       id: Date.now().toString(),
       date: form.date instanceof Date ? form.date.toISOString() : null,
-      category: form.category || "MX", // default to "Miscellaneous"
+      category: form.category
     };
 
-    console.log("DISPATCHING EXPENSE:", formattedExpense);
-    dispatch(addExpenses(formattedExpense));
-
+    dispatch(addExpenseRequest(formattedExpense));
+    toast.current.show({
+      severity: 'success',
+      summary: 'Success',
+      detail: 'Expense added successfully',
+      life: 3000
+    });
     setForm({
       title: "",
       amount: "",
@@ -66,6 +72,9 @@ const ExpenseForm = () => {
   };
 
   return (
+    <>
+      <Toast ref={toast} />
+      <h1 className="mb-4">Add Expenses</h1>
     <form onSubmit={handleSubmit} className="row row-gap-4 mb-4">
       <InputText
         id="title"
@@ -116,6 +125,7 @@ const ExpenseForm = () => {
         </Button>
       </div>
     </form>
+    </>
   );
 };
 

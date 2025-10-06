@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -6,8 +6,12 @@ import { Button } from 'primereact/button';
 import Calendar from "../../molecules/CalenderField";
 import InputText from "../../molecules/TextInputField";
 import Dropdown from "../../molecules/DropdownField";
-import { updateExpense, deleteExpense } from '../../redux/expensesSlice';
-import ExpenseForm from '../expense-form/expenseForm';
+import { Toast } from 'primereact/toast';
+
+import {
+  updateExpenseRequest,
+  deleteExpenseRequest
+} from '../../redux/expensesSlice';
 
 const categories = [
   { name: "Food", code: "FD" },
@@ -30,32 +34,39 @@ const categories = [
 
 const ExpenseList = () => {
   const dispatch = useDispatch();
-  const expenses = useSelector(state => state.expenses);
-  const [editingRows, setEditingRows] = useState({});
+  const toast = useRef(null);
 
-  // console.log(expenses);
+  const expenses = useSelector(state => state.expenses.expenses) || [];
+  const loading = useSelector(state => state.expenses.loading);
+  const [editingRows, setEditingRows] = useState({});
 
   // Called when row editing is finished (Save clicked)
   const onRowEditComplete = (e) => {
-    let updatedExpense = { ...e.newData };
+    const updatedExpense = {
+      ...e.newData,
+      id: e.data.id,
+    };
 
-    // Convert date to ISO string if it's a Date object or string
-    if (updatedExpense.date) {
-      const date = new Date(updatedExpense.date);
-      if (date instanceof Date && !isNaN(date)) {
-        updatedExpense.date = date.toISOString();
-      }
+    // Handle date conversion
+    if (updatedExpense.date instanceof Date) {
+      updatedExpense.date = updatedExpense.date.toISOString();
     }
 
-    // Handle category
+    // Fallback category if missing
     if (!updatedExpense.category) {
       updatedExpense.category = "MX";
     }
 
-    // Dispatch update action
-    dispatch(updateExpense(updatedExpense));
+    dispatch(updateExpenseRequest(updatedExpense));
 
-    // Remove row from editing rows state
+    toast.current?.show({
+      severity: 'success',
+      summary: 'Updated',
+      detail: 'Expense updated successfully',
+      life: 2000,
+    });
+
+    // Remove from editing rows state
     setEditingRows(prev => {
       const updated = { ...prev };
       delete updated[updatedExpense.id];
@@ -85,32 +96,38 @@ const ExpenseList = () => {
     />
   );
 
-  const categoryEditor = (options) => {
-    return (
-      <Dropdown
-        value={options.value}
-        options={categories}
-        optionLabel="name"
-        optionValue="code"
-        onChange={(e) => {
-          options.editorCallback(e.value);
-        }}
-        placeholder="Select a category"
-        autoFocus
-        style={{ width: '100%' }}
-      />
-    );
-  };
+  const categoryEditor = (options) => (
+    <Dropdown
+      value={options.value}
+      options={categories}
+      optionLabel="name"
+      optionValue="code"
+      onChange={(e) => options.editorCallback(e.value)}
+      placeholder="Select a category"
+      autoFocus
+      style={{ width: '100%' }}
+    />
+  );
 
   const dateEditor = (options) => {
-    const dateValue = options.value ? new Date(options.value) : null;
+    let dateValue = null;
+    if (options.value) {
+      try {
+        dateValue = options.value instanceof Date ? 
+          options.value : new Date(options.value);
+      } catch (e) {
+        dateValue = null;
+      }
+    }
+
     return (
       <Calendar
         value={dateValue}
         onChange={(e) => {
           const selectedDate = e.value;
           if (selectedDate) {
-            options.editorCallback(selectedDate.toISOString());
+            // Ensure we're passing a Date object
+            options.editorCallback(selectedDate);
           } else {
             options.editorCallback(null);
           }
@@ -121,7 +138,7 @@ const ExpenseList = () => {
     );
   };
 
-  // Renderers for category and date to display formatted values
+  // Display formatters for category and date columns
   const categoryBodyTemplate = (rowData) => {
     const categoryObj = categories.find(cat => cat.code === rowData.category);
     return categoryObj?.name || '';
@@ -130,12 +147,12 @@ const ExpenseList = () => {
   const dateBodyTemplate = (rowData) => {
     if (!rowData.date) return '';
     const date = new Date(rowData.date);
-    return date instanceof Date && !isNaN(date)
+    return !isNaN(date)
       ? date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : '';
   };
 
-  // Action buttons: Delete only, editing handled by row editor column
+  // Delete button action
   const actionBodyTemplate = (rowData) => (
     <Button
       icon="pi pi-trash"
@@ -143,19 +160,30 @@ const ExpenseList = () => {
       rounded
       text
       aria-label="Delete"
-      onClick={() => dispatch(deleteExpense(rowData.id))}
+      onClick={() => {
+        dispatch(deleteExpenseRequest(rowData.id));
+        toast.current?.show({
+          severity: 'info',
+          summary: 'Deleted',
+          detail: 'Expense deleted',
+          life: 2000,
+        });
+      }}
     />
   );
 
+  // Fix onRowEditChange to update editingRows correctly as an object
+  const onRowEditChange = (e) => {
+    setEditingRows(e.data);
+  };
+
   return (
     <div>
-      <h2>Expenses</h2>
-
-      {/* Form to add new expense */}
-      <ExpenseForm />
+      <Toast ref={toast} />
+      <h1 className="mb-4">Expenses</h1>
 
       <DataTable
-        value={expenses}
+        value={Array.isArray(expenses) ? expenses : []}
         editMode="row"
         dataKey="id"
         editingRows={editingRows}
@@ -163,9 +191,11 @@ const ExpenseList = () => {
         onRowEditComplete={onRowEditComplete}
         showGridlines
         removableSort
-        >
-        <Column field="title" header="Title" editor={textEditor}  />
-        <Column field="amount" header="Amount" editor={numberEditor}  />
+        emptyMessage="No expenses found"
+        loading={loading}
+      >
+        <Column field="title" header="Title" editor={textEditor} />
+        <Column field="amount" header="Amount" editor={numberEditor} />
         <Column
           field="category"
           header="Category"
@@ -177,10 +207,17 @@ const ExpenseList = () => {
           header="Date"
           editor={dateEditor}
           body={dateBodyTemplate}
-          
         />
-        <Column rowEditor header="Edit" style={{ width: '7rem', textAlign: 'center' }} />
-        <Column body={actionBodyTemplate} header="Delete" style={{ width: '4rem', textAlign: 'center' }} />
+        <Column
+          rowEditor
+          header="Edit"
+          style={{ width: '7rem', textAlign: 'center' }}
+        />
+        <Column
+          body={actionBodyTemplate}
+          header="Delete"
+          style={{ width: '4rem', textAlign: 'center' }}
+        />
       </DataTable>
     </div>
   );

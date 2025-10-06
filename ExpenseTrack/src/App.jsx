@@ -6,15 +6,18 @@ import 'primereact/resources/primereact.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'primeicons/primeicons.css';
 import {Provider} from 'react-redux';
-import store from "./redux/store"
-import Layout from './components/Layout/Layout'
+import store from "./redux/store";
+import Layout from './components/Layout/Layout';
+import { AuthProvider } from './routes/Authenticator';
 
 function App() {
   return (
     <Provider store={store}>
-      <div className="App">
+      <AuthProvider>
+        <div className="App">
           <Layout />
-      </div>
+        </div>
+      </AuthProvider>
     </Provider>
   )
 }

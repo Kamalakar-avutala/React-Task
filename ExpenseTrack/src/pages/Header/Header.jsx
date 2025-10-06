@@ -56,9 +56,9 @@ const Header = () => {
     <>
       <CustomToast ref={toast} />
 
-      <nav className="navbar navbar-expand-lg navbar-custom border-bottom">
+      <nav className="navbar navbar-expand-lg bg-dark border-bottom">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand text-white" href="#">
             Expense Track
           </a>
           <button
@@ -78,7 +78,7 @@ const Header = () => {
                 <Button
                   label={userName}
                   icon="pi pi-angle-down"
-                  className="p-button-text bg-transparent"
+                  className="p-button-text bg-transparent text-white"
                   onClick={(e) => menu.current?.toggle(e)}
                 />
                  <Menu model={items} popup ref={menu} />

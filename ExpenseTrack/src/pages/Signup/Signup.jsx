@@ -150,7 +150,7 @@ const SignUp = () => {
 
             <div className="text-center">
               <span>have an account? </span>
-              <Link to="/Login" className="text-decoration-none">
+              <Link to="/login" className="text-decoration-none">
                 Sign In
               </Link>
             </div>
