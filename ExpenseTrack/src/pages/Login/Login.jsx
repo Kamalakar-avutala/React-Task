@@ -1,16 +1,16 @@
-// src/pages/Login.jsx
-
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import TextInputField from "../../molecules/TextInputField";
 import Button from "../../atom/Button";
-import PasswordInput from "../../molecules/PasswordInput";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import CustomToast from "../../atom/Toast";
 import { useAuth } from "../../routes/Authenticator";
+import { SIGNUP, DASHBOARD } from "../../constants/routes";
+import { yupResolver } from '@hookform/resolvers/yup';
+import Validations from '../../validations/validationSchemas';
 
 function Login() {
   const {
@@ -18,11 +18,15 @@ function Login() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    mode: "onTouched",
-    reValidateMode: "onChange"
+    mode: "onChange",
+    resolver: yupResolver(Validations.loginSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
   });
 
-  const toast = useRef(null);
+  const toastRef = useRef(null);
   const navigate = useNavigate();
 
   const { setIsAuthenticated } = useAuth();
@@ -37,6 +41,9 @@ function Login() {
 
       const token = await userCredential.user.getIdToken();
       localStorage.setItem("token", token);
+      
+      const uid = userCredential.user.uid;
+      localStorage.setItem("uid", uid);
 
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -48,7 +55,7 @@ function Login() {
           summary: "Success",
           detail: "Login successful!",
         });
-        navigate("/dashboard", { replace: true });
+        navigate(DASHBOARD, { replace: true });
       } else {
         toast.current.show({
           severity: "error",
@@ -68,7 +75,7 @@ function Login() {
 
   return (
     <section className="d-flex min-vh-100 align-items-center justify-content-center">
-      <CustomToast ref={toast} />
+      <CustomToast ref={toastRef} />
       <div className="card align-middle border-md mx-auto w-25">
         <div className="card-body w-100 p-4 pb-5">
           <h5 className="card-title fs-2 text-center mb-3">Login</h5>
@@ -80,32 +87,17 @@ function Login() {
               id="email"
               label="Email"
               type="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Please enter a valid email address",
-                },
-              })}
+              {...register("email")}
               error={errors.email}
             />
 
-            <PasswordInput
+            <TextInputField
               id="password"
               label="Password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters long",
-                },
-                pattern: {
-                  value: /(?=.*[A-Za-z])(?=.*\d)/,
-                  message: "Password must contain both letters and numbers",
-                },
-              })}
+              className="w-100"
+              type="password"
+              {...register("password")}
               error={errors.password}
-              feedback={false}
             />
 
             <Button type="submit" className="mt-3 mb-3">
@@ -115,7 +107,7 @@ function Login() {
 
           <div className="text-center">
             <span>Don't have an account? </span>
-            <Link to="/signup" className="text-decoration-none">
+            <Link to={SIGNUP} className="text-decoration-none">
               Sign up
             </Link>
           </div>

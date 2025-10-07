@@ -1,20 +1,33 @@
-import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import ExpenseForm from '../components/expense-form/expenseForm';
-import ExpenseList from '../components/expense-list/expenseList';
-import ProtectedRoute from './ProtectedRoute';
+import React, { Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
+import PublicRoute from "./PublicRoute";
+import {
+  DASHBOARD,
+  LOGIN,
+  SIGNUP,
+  EXPENSE_FORM,
+  EXPENSE_LIST,
+  HOME,
+} from "../constants/routes";
 
-const Login = React.lazy(() => import('../pages/Login/Login'));
-const SignUp = React.lazy(() => import('../pages/Signup/Signup'));
-const Dashboard = React.lazy(() => import('../components/dashboard/dashboard'));
+const Login = React.lazy(() => import("../pages/Login/Login"));
+const SignUp = React.lazy(() => import("../pages/Signup/Signup"));
+const Dashboard = React.lazy(() => import("../components/dashboard/dashboard"));
+const ExpenseForm = React.lazy(() =>
+  import("../components/expense-form/expenseForm")
+);
+const ExpenseList = React.lazy(() =>
+  import("../components/expense-list/expenseList")
+);
 
-const PublicRoute = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('token'); 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return children;
+// Helper to wrap element with a route guard
+const withRouteGuard = (element, isProtected = true) => {
+  return isProtected ? (
+    <ProtectedRoute>{element}</ProtectedRoute>
+  ) : (
+    <PublicRoute>{element}</PublicRoute>
+  );
 };
 
 const AppRoutes = () => {
@@ -22,65 +35,14 @@ const AppRoutes = () => {
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
         <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
+          path={HOME}
+          element={withRouteGuard(<Navigate to={DASHBOARD} replace />)}
         />
-
-        <Route
-          path="/logout"
-          element={
-            <PublicRoute>
-              <Navigate to="/dashboard" replace />
-            </PublicRoute>
-          }
-        />
-
-        <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <SignUp />
-            </PublicRoute>
-          }
-        />
-
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/dashboard" replace />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/expensive-form"
-          element={
-            <ProtectedRoute>
-              <ExpenseForm />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/expensive-list"
-          element={
-            <ProtectedRoute>
-              <ExpenseList />
-            </ProtectedRoute>
-          }
-        />
+        <Route path={LOGIN} element={withRouteGuard(<Login />, false)} />
+        <Route path={SIGNUP} element={withRouteGuard(<SignUp />, false)} />
+        <Route path={DASHBOARD} element={withRouteGuard(<Dashboard />)} />
+        <Route path={EXPENSE_FORM} element={withRouteGuard(<ExpenseForm />)} />
+        <Route path={EXPENSE_LIST} element={withRouteGuard(<ExpenseList />)} />
       </Routes>
     </Suspense>
   );

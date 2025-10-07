@@ -1,0 +1,18 @@
+export const categories = [
+  { name: "Food", code: "FD" },
+  { name: "Transport", code: "TS" },
+  { name: "Utilities", code: "UT" },
+  { name: "Rent", code: "RT" },
+  { name: "Entertainment", code: "EN" },
+  { name: "Healthcare", code: "HC" },
+  { name: "Education", code: "ED" },
+  { name: "Clothing", code: "CL" },
+  { name: "Travel", code: "TR" },
+  { name: "Groceries", code: "GR" },
+  { name: "Insurance", code: "IN" },
+  { name: "Personal Care", code: "PC" },
+  { name: "Savings", code: "SV" },
+  { name: "Gifts", code: "GF" },
+  { name: "Subscriptions", code: "SB" },
+  { name: "Miscellaneous", code: "MX" },
+];

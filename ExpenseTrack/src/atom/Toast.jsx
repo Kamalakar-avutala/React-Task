@@ -1,28 +1,35 @@
-import React, { useImperativeHandle, useRef } from "react";
+// src/CustomToast.jsx
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import { Toast } from "primereact/toast";
 
-const VITE_TOAST_DEFAULT_LIFE = import.meta.env.VITE_TOAST_DEFAULT_LIFE;
+const DEFAULT_LIFE = 3000;
 
-const CustomToast = React.forwardRef((props, ref) => {
+const CustomToast = forwardRef((props, ref) => {
   const toastRef = useRef(null);
 
-  // Expose custom show method with default timing
   useImperativeHandle(ref, () => ({
-    show: (options) => {
-      if (!options.severity || !options.summary) {
-        console.warn('Toast requires severity and summary properties');
+    show: ({ severity, summary, detail, life }) => {
+      if (!severity || !summary) {
+        console.warn("Toast: severity and summary are required");
         return;
       }
-      toastRef.current.show({
-        severity: options.severity,
-        summary: options.summary,
-        detail: options.detail,
-        life: options.life || VITE_TOAST_DEFAULT_LIFE,
+      toastRef.current?.show({
+        severity,
+        summary,
+        detail,
+        life: life || DEFAULT_LIFE,
       });
     }
   }));
 
-  return <Toast ref={toastRef} position={props.position || "top-right"} />;
+  return (
+    <Toast
+      ref={toastRef}
+      position={props.position || "top-right"}
+      // optionally appendTo to ensure it's visible above everything
+      appendTo={props.appendTo ?? "self"}
+    />
+  );
 });
 
 export default CustomToast;

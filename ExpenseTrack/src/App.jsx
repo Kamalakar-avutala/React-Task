@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.scss'
-import { PrimeReactContext } from 'primereact/api';
-import 'primereact/resources/themes/md-light-indigo/theme.css';
+import { PrimeReactProvider } from 'primereact/api';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'primeicons/primeicons.css';
@@ -13,11 +13,13 @@ import { AuthProvider } from './routes/Authenticator';
 function App() {
   return (
     <Provider store={store}>
-      <AuthProvider>
-        <div className="App">
-          <Layout />
-        </div>
-      </AuthProvider>
+      <PrimeReactProvider>
+        <AuthProvider>
+          <div className="App">
+            <Layout />
+          </div>
+        </AuthProvider>
+      </PrimeReactProvider>
     </Provider>
   )
 }

@@ -47,3 +47,15 @@ td {
     gap:8px;
   }
 }
+
+.expense-table {
+  tbody {
+    vertical-align: middle !important;
+  }
+
+  td {
+    label:empty {
+      display: none;
+    }
+  }
+}

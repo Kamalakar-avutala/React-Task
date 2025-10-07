@@ -1,14 +1,16 @@
 import React, { useRef } from "react";
 import { useForm } from "react-hook-form";
 import TextInputField from "../../molecules/TextInputField";
-import PasswordInput from "../../molecules/PasswordInput";
 import Button from "../../atom/Button";
 import { Link } from "react-router-dom";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../../firebase";
-import { db } from "../../firebase"; 
+import { db } from "../../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import CustomToast from "../../atom/Toast"; 
+import CustomToast from "../../atom/Toast";
+import { yupResolver } from '@hookform/resolvers/yup';
+import Validations from '../../validations/validationSchemas';
+import {  LOGIN } from "../../constants/routes";
 
 const SignUp = () => {
   const toast = useRef(null);
@@ -18,7 +20,15 @@ const SignUp = () => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm({
+    mode: "onChange",
+    resolver: yupResolver(Validations.signupSchema),
+    defaultValues: {
+      userName: '',
+      email: '',
+      password: '',
+    }
+  });
 
   const onSubmit = async (data) => {
     try {
@@ -69,13 +79,7 @@ const SignUp = () => {
             <TextInputField
               id="username"
               label="Username"
-              {...register("userName", {
-                required: "Username is required",
-                minLength: {
-                  value: 6,
-                  message: "Username must be at least 6 characters long",
-                },
-              })}
+              {...register("userName")}
               error={errors.userName ? { message: errors.userName.message } : null}
             />
 
@@ -83,31 +87,15 @@ const SignUp = () => {
               id="email"
               label="Email"
               type="email"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Please enter a valid email address",
-                },
-              })}
+              {...register("email")}
               error={errors.email ? { message: errors.email.message } : null}
             />
-
-            <PasswordInput
+            <TextInputField
               id="password"
               label="Password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 8,
-                  message: "Password must be at least 8 characters long",
-                },
-                validate: (value) =>
-                  /(?=.*[A-Za-z])(?=.*\d)/.test(value) ||
-                  "Password must contain both letters and numbers",
-              })}
-              error={errors.password ? { message: errors.password.message } : null}
-              feedback={false}
+              type="password"
+              {...register("password")}
+              error={errors.password}
             />
 
             <Button type="submit" className="mb-3">
@@ -117,7 +105,7 @@ const SignUp = () => {
 
           <div className="text-center">
             <span>have an account? </span>
-            <Link to="/login" className="text-decoration-none">
+            <Link to={LOGIN} className="text-decoration-none">
               Sign In
             </Link>
           </div>

@@ -1,224 +1,204 @@
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Button } from 'primereact/button';
-import Calendar from "../../molecules/CalenderField";
-import InputText from "../../molecules/TextInputField";
-import Dropdown from "../../molecules/DropdownField";
-import { Toast } from 'primereact/toast';
+import Calendar from '../../molecules/CalenderField';
+import InputText from '../../molecules/TextInputField';
+import Dropdown from '../../molecules/DropdownField';
+import CustomToast from '../../atom/Toast';
+import { categories } from '../../constants/categories';
+import Button from '../../atom/Button';
+import { Link } from 'react-router-dom';
+import { EXPENSE_FORM } from '../../constants/routes';
+import Table from '../../atom/Table/Table';
 
 import {
   updateExpenseRequest,
-  deleteExpenseRequest
+  deleteExpenseRequest,
 } from '../../redux/expensesSlice';
 
-const categories = [
-  { name: "Food", code: "FD" },
-  { name: "Transport", code: "TS" },
-  { name: "Utilities", code: "UT" },
-  { name: "Rent", code: "RT" },
-  { name: "Entertainment", code: "EN" },
-  { name: "Healthcare", code: "HC" },
-  { name: "Education", code: "ED" },
-  { name: "Clothing", code: "CL" },
-  { name: "Travel", code: "TR" },
-  { name: "Groceries", code: "GR" },
-  { name: "Insurance", code: "IN" },
-  { name: "Personal Care", code: "PC" },
-  { name: "Savings", code: "SV" },
-  { name: "Gifts", code: "GF" },
-  { name: "Subscriptions", code: "SB" },
-  { name: "Miscellaneous", code: "MX" },
-];
-
 const ExpenseList = () => {
+  const toastRef = useRef();
   const dispatch = useDispatch();
-  const toast = useRef(null);
+  const expenses = useSelector((state) => state.expenses.expenses) ?? [];
+  const loading = useSelector((state) => state.expenses.loading);
+  const [editingId, setEditingId] = useState(null);
+  const [editedExpense, setEditedExpense] = useState({});
 
-  const expenses = useSelector(state => state.expenses.expenses) || [];
-  const loading = useSelector(state => state.expenses.loading);
-  const [editingRows, setEditingRows] = useState({});
+  const handleEdit = (expense) => {
+    setEditingId(expense.id);
+    setEditedExpense({ ...expense });
+  };
 
-  // Called when row editing is finished (Save clicked)
-  const onRowEditComplete = (e) => {
-    const updatedExpense = {
-      ...e.newData,
-      id: e.data.id,
-    };
+  const handleSave = (id) => {
+    const updatedExpense = { ...editedExpense, id };
 
-    // Handle date conversion
     if (updatedExpense.date instanceof Date) {
       updatedExpense.date = updatedExpense.date.toISOString();
     }
 
-    // Fallback category if missing
     if (!updatedExpense.category) {
-      updatedExpense.category = "MX";
+      updatedExpense.category = 'MX';
     }
 
     dispatch(updateExpenseRequest(updatedExpense));
+    setEditingId(null);
 
-    toast.current?.show({
+    toastRef.current?.show({
       severity: 'success',
-      summary: 'Updated',
+      summary: 'Success',
       detail: 'Expense updated successfully',
-      life: 2000,
-    });
-
-    // Remove from editing rows state
-    setEditingRows(prev => {
-      const updated = { ...prev };
-      delete updated[updatedExpense.id];
-      return updated;
     });
   };
 
-  // Editors for different columns
-  const textEditor = (options) => (
-    <InputText
-      value={options.value ?? ''}
-      onChange={(e) => options.editorCallback(e.target.value)}
-      autoFocus
-    />
-  );
+  const handleDelete = (id) => {
+    dispatch(deleteExpenseRequest(id));
 
-  const numberEditor = (options) => (
-    <InputText
-      value={options.value ?? ''}
-      type="number"
-      onChange={(e) => {
-        const val = e.target.value;
-        options.editorCallback(val === '' ? null : parseFloat(val));
-      }}
-      min={0}
-      autoFocus
-    />
-  );
-
-  const categoryEditor = (options) => (
-    <Dropdown
-      value={options.value}
-      options={categories}
-      optionLabel="name"
-      optionValue="code"
-      onChange={(e) => options.editorCallback(e.value)}
-      placeholder="Select a category"
-      autoFocus
-      style={{ width: '100%' }}
-    />
-  );
-
-  const dateEditor = (options) => {
-    let dateValue = null;
-    if (options.value) {
-      try {
-        dateValue = options.value instanceof Date ? 
-          options.value : new Date(options.value);
-      } catch (e) {
-        dateValue = null;
-      }
-    }
-
-    return (
-      <Calendar
-        value={dateValue}
-        onChange={(e) => {
-          const selectedDate = e.value;
-          if (selectedDate) {
-            // Ensure we're passing a Date object
-            options.editorCallback(selectedDate);
-          } else {
-            options.editorCallback(null);
-          }
-        }}
-        dateFormat="dd/mm/yy"
-        autoFocus
-      />
-    );
+    toastRef.current?.show({
+      severity: 'error',
+      summary: 'Deleted',
+      detail: 'Expense deleted successfully',
+    });
   };
 
-  // Display formatters for category and date columns
-  const categoryBodyTemplate = (rowData) => {
-    const categoryObj = categories.find(cat => cat.code === rowData.category);
-    return categoryObj?.name || '';
+  const handleChange = (field, value) => {
+    setEditedExpense((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const dateBodyTemplate = (rowData) => {
-    if (!rowData.date) return '';
-    const date = new Date(rowData.date);
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
     return !isNaN(date)
-      ? date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      ? date.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        })
       : '';
   };
 
-  // Delete button action
-  const actionBodyTemplate = (rowData) => (
-    <Button
-      icon="pi pi-trash"
-      severity="danger"
-      rounded
-      text
-      aria-label="Delete"
-      onClick={() => {
-        dispatch(deleteExpenseRequest(rowData.id));
-        toast.current?.show({
-          severity: 'info',
-          summary: 'Deleted',
-          detail: 'Expense deleted',
-          life: 2000,
-        });
-      }}
-    />
-  );
-
-  // Fix onRowEditChange to update editingRows correctly as an object
-  const onRowEditChange = (e) => {
-    setEditingRows(e.data);
+  const getCategoryName = (code) => {
+    const category = categories.find((cat) => cat.code === code);
+    return category?.name || '';
   };
+
+  const columns = [
+    {
+      key: 'title',
+      title: 'Title',
+      render: (cellValue, row) =>
+        editingId === row.id ? (
+          <InputText
+            key={`title-${row.id}`}
+            value={editedExpense.title || ''}
+            onChange={(e) => handleChange('title', e.target.value)}
+          />
+        ) : (
+          cellValue
+        ),
+    },
+    {
+      key: 'amount',
+      title: 'Amount',
+      render: (cellValue, row) =>
+        editingId === row.id ? (
+          <InputText
+            key={`amount-${row.id}`}
+            type="number"
+            value={editedExpense.amount || ''}
+            onChange={(e) =>
+              handleChange('amount', parseFloat(e.target.value) || 0)
+            }
+          />
+        ) : (
+          cellValue
+        ),
+    },
+    {
+      key: 'category',
+      title: 'Category',
+      render: (cellValue, row) =>
+        editingId === row.id ? (
+          <Dropdown
+            key={`category-${row.id}`}
+            value={editedExpense.category}
+            options={categories}
+            optionLabel="name"
+            optionValue="code"
+            onChange={(e) => handleChange('category', e.value)}
+            placeholder="Select a category"
+          />
+        ) : (
+          getCategoryName(cellValue)
+        ),
+    },
+    {
+      key: 'date',
+      title: 'Date',
+      render: (cellValue, row) =>
+        editingId === row.id ? (
+          <Calendar
+            key={`date-${row.id}`}
+            value={editedExpense.date ? new Date(editedExpense.date) : null}
+            onChange={(e) => handleChange('date', e.value)}
+            dateFormat="dd/mm/yy"
+          />
+        ) : (
+          formatDate(cellValue)
+        ),
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      render: (_, row) => (
+        <div key={`actions-${row.id}`}>
+          {editingId === row.id ? (
+            <Button
+              onClick={() => handleSave(row.id)}
+              className="me-2 border-0 bg-secondary p-0"
+            >
+              <i className="pi pi-check"></i>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => handleEdit(row)}
+              className="me-2 border-0 bg-secondary p-0"
+            >
+              <i className="pi pi-pencil"></i>
+            </Button>
+          )}
+          <Button
+            severity="danger"
+            className="border-0 bg-secondary p-0"
+            onClick={() => handleDelete(row.id)}
+          >
+            <i className="pi pi-trash"></i>
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div>
-      <Toast ref={toast} />
-      <h1 className="mb-4">Expenses</h1>
-
-      <DataTable
-        value={Array.isArray(expenses) ? expenses : []}
-        editMode="row"
-        dataKey="id"
-        editingRows={editingRows}
-        onRowEditChange={(e) => setEditingRows(e.data)}
-        onRowEditComplete={onRowEditComplete}
-        showGridlines
-        removableSort
+      <CustomToast ref={toastRef} position="top-right" />
+      <div className="mb-4 d-flex justify-content-between align-items-center">
+        <h1>Expenses</h1>
+        <Button className="mt-3 mb-3">
+          <Link to={EXPENSE_FORM} className="text-white text-decoration-none">
+            Add Expenses
+          </Link>
+        </Button>
+      </div>
+      <Table
+        data={expenses}
+        columns={columns}
+        isLoading={loading}
+        className="expense-table"
         emptyMessage="No expenses found"
-        loading={loading}
-      >
-        <Column field="title" header="Title" editor={textEditor} />
-        <Column field="amount" header="Amount" editor={numberEditor} />
-        <Column
-          field="category"
-          header="Category"
-          editor={categoryEditor}
-          body={categoryBodyTemplate}
-        />
-        <Column
-          field="date"
-          header="Date"
-          editor={dateEditor}
-          body={dateBodyTemplate}
-        />
-        <Column
-          rowEditor
-          header="Edit"
-          style={{ width: '7rem', textAlign: 'center' }}
-        />
-        <Column
-          body={actionBodyTemplate}
-          header="Delete"
-          style={{ width: '4rem', textAlign: 'center' }}
-        />
-      </DataTable>
+        onRowClick={null}
+      />
     </div>
   );
 };

@@ -1,35 +1,20 @@
 import React, { useRef } from "react";
 import Calendar from "../../molecules/CalenderField";
+import { categories } from "../../constants/categories";
 import InputText from "../../molecules/TextInputField";
 import Dropdown from "../../molecules/DropdownField";
 import Button from "../../atom/Button";
 import { useDispatch } from "react-redux";
 import { useForm, Controller } from "react-hook-form";
 import { addExpenseRequest } from "../../redux/expensesSlice";
-import { Toast } from "primereact/toast";
+import CustomToast from "../../atom/Toast";
+import { yupResolver } from '@hookform/resolvers/yup';
+import Validations from '../../validations/validationSchemas';
 
-const categories = [
-  { name: "Food", code: "FD" },
-  { name: "Transport", code: "TS" },
-  { name: "Utilities", code: "UT" },
-  { name: "Rent", code: "RT" },
-  { name: "Entertainment", code: "EN" },
-  { name: "Healthcare", code: "HC" },
-  { name: "Education", code: "ED" },
-  { name: "Clothing", code: "CL" },
-  { name: "Travel", code: "TR" },
-  { name: "Groceries", code: "GR" },
-  { name: "Insurance", code: "IN" },
-  { name: "Personal Care", code: "PC" },
-  { name: "Savings", code: "SV" },
-  { name: "Gifts", code: "GF" },
-  { name: "Subscriptions", code: "SB" },
-  { name: "Miscellaneous", code: "MX" },
-];
 
 const ExpenseForm = () => {
   const dispatch = useDispatch();
-  const toast = useRef(null);
+  const toastRef = useRef(null);
 
   const {
     register,
@@ -39,6 +24,7 @@ const ExpenseForm = () => {
     reset,
     formState: { errors },
   } = useForm({
+    resolver: yupResolver(Validations.expenseSchema),
     defaultValues: {
       title: "",
       amount: "",
@@ -55,7 +41,7 @@ const ExpenseForm = () => {
     };
 
     dispatch(addExpenseRequest(formattedExpense));
-    toast.current.show({
+    toastRef.current?.show({
       severity: "success",
       summary: "Success",
       detail: "Expense added successfully",
@@ -66,7 +52,7 @@ const ExpenseForm = () => {
 
   return (
     <>
-      <Toast ref={toast} />
+      <CustomToast ref={toastRef} />
       <h1 className="mb-4">Add Expenses</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="row row-gap-4 mb-4">
         <div className="col-12 col-md-6">
@@ -74,13 +60,7 @@ const ExpenseForm = () => {
             id="title"
             name="title"
             label="Title"
-            {...register("title", {
-              required: "Title is required",
-              minLength: {
-                value: 6,
-                message: "Title must be at least 6 characters",
-              },
-            })}
+            {...register("title")}
             className={`w-100 ${errors.title ? "p-invalid" : ""}`}
             invalid={!!errors.title}
             error={errors.title ? { message: errors.title.message } : null}
@@ -93,10 +73,7 @@ const ExpenseForm = () => {
             name="amount"
             label="Amount"
             type="number"
-            {...register("amount", {
-              required: "Amount is required",
-              min: { value: 0, message: "Amount must be greater than 0" },
-            })}
+            {...register("amount")}
             className={`w-100 ${errors.amount ? "p-invalid" : ""}`}
             invalid={!!errors.amount}
             error={errors.amount ? { message: errors.amount.message } : null}
@@ -107,7 +84,6 @@ const ExpenseForm = () => {
           <Controller
             name="category"
             control={control}
-            rules={{ required: "Category is required" }}
             render={({ field }) => (
               <Dropdown
                 id="category"
@@ -131,14 +107,13 @@ const ExpenseForm = () => {
           <Controller
             name="date"
             control={control}
-            rules={{ required: "Date is required" }}
             render={({ field }) => (
               <Calendar
                 id="date"
                 name="date"
                 label="Date"
                 value={field.value}
-                onChange={(e) => field.onChange(e.value)}
+                onChange={(e) => field.onChange(e?.value ?? null)}
                 dateFormat="yy-mm-dd"
                 className={`w-100 ${errors.date ? "p-invalid" : ""}`}
                 invalid={!!errors.date}
