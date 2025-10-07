@@ -1,0 +1,32 @@
+{
+  "expenses": [
+    {
+      "id": "1",
+      "userId": 1,
+      "description": "Groceries",
+      "amount": 50,
+      "date": "2025-10-01"
+    },
+    {
+      "id": "2",
+      "userId": 1,
+      "description": "Gas",
+      "amount": 40,
+      "date": "2025-10-02"
+    },
+    {
+      "id": "1759815457117",
+      "title": "test123",
+      "amount": "444",
+      "category": "TS",
+      "date": "2025-10-20T18:30:00.000Z"
+    },
+    {
+      "id": "1759816724811",
+      "title": "testert",
+      "amount": "22",
+      "category": "TS",
+      "date": "2025-10-13T18:30:00.000Z"
+    }
+  ]
+}
