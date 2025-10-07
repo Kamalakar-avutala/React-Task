@@ -41,7 +41,7 @@ const DropdownField = ({
         error={!!error}
         onChange={onChange}
       />
-      {error && <span className="text-danger mb-1" role="alert">{error}</span>}
+      {error && <small className="p-error d-inline-block mt-1" role="alert">{error}</small>}
     </div>
   );
 };

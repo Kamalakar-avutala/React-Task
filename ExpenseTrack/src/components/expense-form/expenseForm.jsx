@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import Calendar from "../../molecules/CalenderField";
 import InputText from "../../molecules/TextInputField";
 import Dropdown from "../../molecules/DropdownField";
 import Button from "../../atom/Button";
 import { useDispatch } from "react-redux";
+import { useForm, Controller } from "react-hook-form";
 import { addExpenseRequest } from "../../redux/expensesSlice";
 import { Toast } from "primereact/toast";
-import { useRef } from "react";
 
 const categories = [
   { name: "Food", code: "FD" },
@@ -31,100 +31,129 @@ const ExpenseForm = () => {
   const dispatch = useDispatch();
   const toast = useRef(null);
 
-  const [form, setForm] = useState({
-    title: "",
-    amount: "",
-    category: "",
-    date: null,
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prevForm) => ({
-      ...prevForm,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const formattedExpense = {
-      ...form,
-      id: Date.now().toString(),
-      date: form.date instanceof Date ? form.date.toISOString() : null,
-      category: form.category
-    };
-
-    dispatch(addExpenseRequest(formattedExpense));
-    toast.current.show({
-      severity: 'success',
-      summary: 'Success',
-      detail: 'Expense added successfully',
-      life: 3000
-    });
-    setForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
       title: "",
       amount: "",
       category: "",
       date: null,
+    },
+  });
+
+  const onSubmit = (data) => {
+    const formattedExpense = {
+      ...data,
+      id: Date.now().toString(),
+      date: data.date instanceof Date ? data.date.toISOString() : null,
+    };
+
+    dispatch(addExpenseRequest(formattedExpense));
+    toast.current.show({
+      severity: "success",
+      summary: "Success",
+      detail: "Expense added successfully",
+      life: 3000,
     });
+    reset();
   };
 
   return (
     <>
       <Toast ref={toast} />
       <h1 className="mb-4">Add Expenses</h1>
-    <form onSubmit={handleSubmit} className="row row-gap-4 mb-4">
-      <InputText
-        id="title"
-        name="title"
-        label="Title"
-        value={form.title}
-        onChange={handleInputChange}
-        className="col-12 col-md-6"
-      />
+      <form onSubmit={handleSubmit(onSubmit)} className="row row-gap-4 mb-4">
+        <div className="col-12 col-md-6">
+          <InputText
+            id="title"
+            name="title"
+            label="Title"
+            {...register("title", {
+              required: "Title is required",
+              minLength: {
+                value: 6,
+                message: "Title must be at least 6 characters",
+              },
+            })}
+            className={`w-100 ${errors.title ? "p-invalid" : ""}`}
+            invalid={!!errors.title}
+            error={errors.title ? { message: errors.title.message } : null}
+          />
+        </div>
 
-      <InputText
-        id="amount"
-        name="amount"
-        label="Amount"
-        type="number"
-        value={form.amount}
-        onChange={handleInputChange}
-        className="col-12 col-md-6"
-      />
+        <div className="col-12 col-md-6">
+          <InputText
+            id="amount"
+            name="amount"
+            label="Amount"
+            type="number"
+            {...register("amount", {
+              required: "Amount is required",
+              min: { value: 0, message: "Amount must be greater than 0" },
+            })}
+            className={`w-100 ${errors.amount ? "p-invalid" : ""}`}
+            invalid={!!errors.amount}
+            error={errors.amount ? { message: errors.amount.message } : null}
+          />
+        </div>
 
-      <Dropdown
-        id="category"
-        name="category"
-        label="Category"
-        value={form.category}
-        options={categories}
-        optionLabel="name"
-        optionValue="code"
-        onChange={(e) => handleInputChange({ target: { name: "category", value: e.value } })}
-        placeholder="Select a category"
-        checkmark={false}
-        className="col-12 col-md-6"
-      />
+        <div className="col-12 col-md-6">
+          <Controller
+            name="category"
+            control={control}
+            rules={{ required: "Category is required" }}
+            render={({ field }) => (
+              <Dropdown
+                id="category"
+                name="category"
+                label="Category"
+                options={categories}
+                optionLabel="name"
+                optionValue="code"
+                value={field.value}
+                onChange={(e) => field.onChange(e.value)}
+                placeholder="Select a category"
+                className="w-100"
+                required
+                error={errors.category?.message}
+              />
+            )}
+          />
+        </div>
 
-      <Calendar
-        id="date"
-        name="date"
-        label="Date"
-        value={form.date}
-        onChange={handleInputChange}
-        dateFormat="yy-mm-dd"
-        className="col-12 col-md-6"
-      />
+        <div className="col-12 col-md-6">
+          <Controller
+            name="date"
+            control={control}
+            rules={{ required: "Date is required" }}
+            render={({ field }) => (
+              <Calendar
+                id="date"
+                name="date"
+                label="Date"
+                value={field.value}
+                onChange={(e) => field.onChange(e.value)}
+                dateFormat="yy-mm-dd"
+                className={`w-100 ${errors.date ? "p-invalid" : ""}`}
+                invalid={!!errors.date}
+                error={errors.date?.message}
+              />
+            )}
+          />
+        </div>
 
-      <div className="d-flex justify-content-end">
-        <Button type="submit" className="col-2">
-          Add Expense
-        </Button>
-      </div>
-    </form>
+        <div className="d-flex justify-content-end">
+          <Button type="submit" className="col-2">
+            Add Expense
+          </Button>
+        </div>
+      </form>
     </>
   );
 };

@@ -44,7 +44,7 @@ const PasswordInputField = React.forwardRef(
           {...props}
         />
         {error?.message && (
-          <small className="p-error d-inline-block">{error.message}</small>
+          <small className="p-error d-inline-block mt-1">{error.message}</small>
         )}
       </div>
     );

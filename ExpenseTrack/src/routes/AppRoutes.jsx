@@ -8,14 +8,47 @@ const Login = React.lazy(() => import('../pages/Login/Login'));
 const SignUp = React.lazy(() => import('../pages/Signup/Signup'));
 const Dashboard = React.lazy(() => import('../components/dashboard/dashboard'));
 
+const PublicRoute = ({ children }) => {
+  const isAuthenticated = !!localStorage.getItem('token'); 
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 const AppRoutes = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
-          <Route
+        <Route
+          path="/logout"
+          element={
+            <PublicRoute>
+              <Navigate to="/dashboard" replace />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <SignUp />
+            </PublicRoute>
+          }
+        />
+
+        <Route
           path="/"
           element={
             <ProtectedRoute>
@@ -24,7 +57,6 @@ const AppRoutes = () => {
           }
         />
 
-        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={

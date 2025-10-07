@@ -21,7 +21,7 @@ const Input = React.forwardRef(({
         className={`${inputClassName} w-100`}
         {...props}
       />
-      {error?.message && <small className="p-error d-inline-block">{error.message}</small>}
+      {error?.message && <small className="p-error d-inline-block mt-1">{error.message}</small>}
     </div>
   );
 });

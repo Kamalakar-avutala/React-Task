@@ -1,6 +1,6 @@
 import React from "react";
 import AppRoutes from "../../routes/AppRoutes";
-import Header from "../../pages/Header/Header";
+import Header from "../../components/Header/Header";
 import SideNav from "../../components/SideNav/SideNav";
 import { useAuth } from "../../routes/Authenticator";
 const Layout = () => {

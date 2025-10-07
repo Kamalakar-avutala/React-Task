@@ -1,84 +1,65 @@
-// src/atom/Calendar/Calendar.jsx
+// Molecule: CalendarField.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Calendar as PrimeCalendar } from 'primereact/calendar';
 import Label from '../atom/Label/Label';
+import CalendarAtom from '../atom/Calendar/Calendar';
 
-const Calendar = ({
+const CalendarField = ({
   id,
-  value,
-  label,
-  onChange,
   name,
-  minDate,
-  maxDate,
-  disabled,
-  showIcon = false,
-  error,
-  required,
+  label,
+  value,
+  onChange,
+  placeholder,
   className,
-  ...props
+  dateFormat,
+  required,
+  error,
+  invalid
 }) => {
-
-  const handleChange = (e) => {
-    const selectedDate = e?.value;
-
-    if (selectedDate instanceof Date && !isNaN(selectedDate)) {
-      onChange?.({
-        target: {
-          name,
-          value: selectedDate, // pass Date object as value
-        },
-      });
-    } else {
-      // Optional: handle invalid date or clear value
-      onChange?.({
-        target: {
-          name,
-          value: null,
-        },
-      });
-    }
-  };
-
   return (
-    <div className={`calendar-wrapper d-inline-flex flex-column ${className || ''}`}>
-      <Label
-        htmlFor={id}
-        className="mb-2"
-      >
-        {label}
-        {required && <span className="text-danger"> *</span>}
-      </Label>
-
-      <PrimeCalendar
+    <div className={`calendar-field d-inline-flex flex-column ${className || ''}`}>
+      {label && (
+        <Label htmlFor={id} className="mb-2">
+          {label}
+          {required && <span className="text-danger"> *</span>}
+        </Label>
+      )}
+      <CalendarAtom
         id={id}
-        value={value}
-        onChange={handleChange} // ✅ uses updated logic
         name={name}
-        minDate={minDate}
-        maxDate={maxDate}
-        disabled={disabled}
-        showIcon={showIcon}
-        className={`w-100 ${error ? 'p-invalid' : ''}`}
-        {...props}
+        value={value}
+        onChange={onChange}
+        className="w-100"
+        dateFormat={dateFormat}
+        invalid={invalid}
       />
-
-      {error && <small className="p-error">{error}</small>}
+      {error && <small className="p-error d-inline-block mt-1" role="alert">{error}</small>}
     </div>
   );
 };
 
-Calendar.propTypes = {
+CalendarField.propTypes = {
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
+  label: PropTypes.string,
   value: PropTypes.any,
   onChange: PropTypes.func.isRequired,
-  minDate: PropTypes.instanceOf(Date),
-  maxDate: PropTypes.instanceOf(Date),
-  disabled: PropTypes.bool,
-  showIcon: PropTypes.bool,
+  placeholder: PropTypes.string,
+  className: PropTypes.string,
+  dateFormat: PropTypes.string,
+  required: PropTypes.bool,
   error: PropTypes.string,
+  invalid: PropTypes.bool
 };
 
-export default Calendar;
+CalendarField.defaultProps = {
+  placeholder: '',
+  className: '',
+  dateFormat: 'yy-mm-dd',
+  required: false,
+  error: '',
+  invalid: false
+};
+
+export default CalendarField;
