@@ -49,6 +49,7 @@ td {
 }
 
 .expense-table {
+  table-layout: fixed;
   tbody {
     vertical-align: middle !important;
   }
@@ -58,4 +59,9 @@ td {
       display: none;
     }
   }
+}
+
+.list-group-item.active {
+  background-color: #fff !important;
+  border-radius: 24px !important;
 }

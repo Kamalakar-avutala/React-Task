@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useForm, Controller } from 'react-hook-form';
 import Calendar from '../../molecules/CalenderField';
 import InputText from '../../molecules/TextInputField';
 import Dropdown from '../../molecules/DropdownField';
@@ -21,23 +22,38 @@ const ExpenseList = () => {
   const expenses = useSelector((state) => state.expenses.expenses) ?? [];
   const loading = useSelector((state) => state.expenses.loading);
   const [editingId, setEditingId] = useState(null);
-  const [editedExpense, setEditedExpense] = useState({});
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    getValues,
+  } = useForm({
+    defaultValues: {
+      title: '',
+      amount: '',
+      category: '',
+      date: null,
+    },
+  });
 
   const handleEdit = (expense) => {
     setEditingId(expense.id);
-    setEditedExpense({ ...expense });
+    reset({
+      title: expense.title,
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date ? new Date(expense.date) : null,
+    });
   };
 
-  const handleSave = (id) => {
-    const updatedExpense = { ...editedExpense, id };
-
-    if (updatedExpense.date instanceof Date) {
-      updatedExpense.date = updatedExpense.date.toISOString();
-    }
-
-    if (!updatedExpense.category) {
-      updatedExpense.category = 'MX';
-    }
+  const onSubmit = (data) => {
+    const updatedExpense = {
+      ...data,
+      id: editingId,
+      date: data.date instanceof Date ? data.date.toISOString() : data.date,
+      category: data.category || 'MX',
+    };
 
     dispatch(updateExpenseRequest(updatedExpense));
     setEditingId(null);
@@ -51,19 +67,11 @@ const ExpenseList = () => {
 
   const handleDelete = (id) => {
     dispatch(deleteExpenseRequest(id));
-
     toastRef.current?.show({
       severity: 'error',
       summary: 'Deleted',
       detail: 'Expense deleted successfully',
     });
-  };
-
-  const handleChange = (field, value) => {
-    setEditedExpense((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
   };
 
   const formatDate = (dateString) => {
@@ -85,67 +93,92 @@ const ExpenseList = () => {
 
   const columns = [
     {
+      key: 'id',
+      title: 'ID',
+      render: (cellValue) => cellValue,
+    },
+    {
       key: 'title',
       title: 'Title',
-      render: (cellValue, row) =>
+      render: (_, row) =>
         editingId === row.id ? (
-          <InputText
-            key={`title-${row.id}`}
-            value={editedExpense.title || ''}
-            onChange={(e) => handleChange('title', e.target.value)}
+          <Controller
+            name="title"
+            control={control}
+            render={({ field }) => (
+              <InputText key={`title-${row.id}`} {...field} />
+            )}
           />
         ) : (
-          cellValue
+          row.title
         ),
     },
     {
       key: 'amount',
       title: 'Amount',
-      render: (cellValue, row) =>
+      render: (_, row) =>
         editingId === row.id ? (
-          <InputText
-            key={`amount-${row.id}`}
-            type="number"
-            value={editedExpense.amount || ''}
-            onChange={(e) =>
-              handleChange('amount', parseFloat(e.target.value) || 0)
-            }
+          <Controller
+            name="amount"
+            control={control}
+            render={({ field }) => (
+              <InputText
+                key={`amount-${row.id}`}
+                type="number"
+                {...field}
+                onChange={(e) =>
+                  field.onChange(parseFloat(e.target.value) || 0)
+                }
+              />
+            )}
           />
         ) : (
-          cellValue
+          row.amount
         ),
     },
     {
       key: 'category',
       title: 'Category',
-      render: (cellValue, row) =>
+      render: (_, row) =>
         editingId === row.id ? (
-          <Dropdown
-            key={`category-${row.id}`}
-            value={editedExpense.category}
-            options={categories}
-            optionLabel="name"
-            optionValue="code"
-            onChange={(e) => handleChange('category', e.value)}
-            placeholder="Select a category"
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <Dropdown
+                key={`category-${row.id}`}
+                value={field.value}
+                options={categories}
+                optionLabel="name"
+                optionValue="code"
+                onChange={(e) => field.onChange(e.value)}
+                placeholder="Select a category"
+              />
+            )}
           />
         ) : (
-          getCategoryName(cellValue)
+          getCategoryName(row.category)
         ),
     },
     {
       key: 'date',
       title: 'Date',
-      render: (cellValue, row) =>
+      render: (_, row) =>
         editingId === row.id ? (
-          <Calendar
-            key={`date-${row.id}`}
-            value={editedExpense.date ? new Date(editedExpense.date) : null}
-            onChange={(e) => handleChange('date', e.value)}
-            dateFormat="dd/mm/yy"
+          <Controller
+            name="date"
+            control={control}
+            render={({ field }) => (
+              <Calendar
+                key={`date-${row.id}`}
+                value={field.value}
+                onChange={(e) => field.onChange(e.value)}
+                dateFormat="dd/mm/yy"
+              />
+            )}
           />
         ) : (
-          formatDate(cellValue)
+          formatDate(row.date)
         ),
     },
     {
@@ -155,7 +188,7 @@ const ExpenseList = () => {
         <div key={`actions-${row.id}`}>
           {editingId === row.id ? (
             <Button
-              onClick={() => handleSave(row.id)}
+              onClick={handleSubmit(onSubmit)}
               className="me-2 border-0 bg-secondary p-0"
             >
               <i className="pi pi-check"></i>

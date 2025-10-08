@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -38,7 +38,8 @@ const Table = ({
   }
 
   // Sort and filter data
-  useEffect(() => {
+  // Memoized filtering and sorting logic
+  const filteredAndSortedData = useMemo(() => {
     let filtered = data.filter(item =>
       columns.some(column =>
         String(item[column.key])
@@ -65,18 +66,22 @@ const Table = ({
       });
     }
 
-    setFilteredData(filtered);
-    setCurrentPage(1);
+    return filtered;
   }, [data, searchTerm, columns, sortConfig]);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  // Memoize pagination calculations
+  const { currentItems, totalPages } = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return {
+      currentItems: filteredAndSortedData.slice(indexOfFirstItem, indexOfLastItem),
+      totalPages: Math.max(1, Math.ceil(filteredAndSortedData.length / itemsPerPage))
+    };
+  }, [filteredAndSortedData, currentPage, itemsPerPage]);
 
-  const handlePageChange = (pageNumber) => {
+  const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
-  };
+  }, []);
 
   if (!data || data.length === 0) {
     return (
@@ -105,13 +110,15 @@ const Table = ({
     );
   }
 
-  const tableClasses = [
-    'table',
-    striped && 'table-striped',
-    hover && 'table-hover',
-    size && `table-${size}`,
-    className
-  ].filter(Boolean).join(' ');
+  const tableClasses = useMemo(() => {
+    return [
+      'table',
+      striped && 'table-striped',
+      hover && 'table-hover',
+      size && `table-${size}`,
+      className
+    ].filter(Boolean).join(' ');
+  }, [striped, hover, size, className]);
 
   const tableContent = (
     <table className={tableClasses}>

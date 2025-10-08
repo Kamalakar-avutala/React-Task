@@ -33,6 +33,15 @@ const ExpenseForm = () => {
     },
   });
 
+  const handleClear = () => {
+    reset({
+      title: "",
+      amount: "",
+      category: "",
+      date: null
+    });
+  }
+
   const onSubmit = (data) => {
     const formattedExpense = {
       ...data,
@@ -108,6 +117,7 @@ const ExpenseForm = () => {
             name="date"
             control={control}
             render={({ field }) => (
+              <div class="position-relative"> 
               <Calendar
                 id="date"
                 name="date"
@@ -118,12 +128,18 @@ const ExpenseForm = () => {
                 className={`w-100 ${errors.date ? "p-invalid" : ""}`}
                 invalid={!!errors.date}
                 error={errors.date?.message}
+                showIcon
               />
+              <i className="pi pi-clock position-absolute top-50 end-0 translate-middle-y mt-3 me-3" />
+              </div>
             )}
           />
         </div>
 
         <div className="d-flex justify-content-end">
+          <Button onClick={handleClear} className="col-2 me-3">
+            Clear
+          </Button>
           <Button type="submit" className="col-2">
             Add Expense
           </Button>

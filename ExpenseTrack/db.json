@@ -580,6 +580,76 @@
       "category": "CL",
       "amount": 333,
       "title": "afsafd"
+    },
+    {
+      "id": "1759895773644",
+      "date": "2025-10-19T18:30:00.000Z",
+      "category": "TS",
+      "amount": 333,
+      "title": "23333"
+    },
+    {
+      "id": "1759895833998",
+      "date": "2025-10-13T18:30:00.000Z",
+      "category": "ED",
+      "amount": 77777,
+      "title": "hhkjhkk"
+    },
+    {
+      "id": "1759897809966",
+      "date": "2025-10-06T18:30:00.000Z",
+      "category": "MX",
+      "amount": 222,
+      "title": "tstttd"
+    },
+    {
+      "id": "1759898484804",
+      "date": "2025-10-13T18:30:00.000Z",
+      "category": "TS",
+      "amount": 2222,
+      "title": "testttt"
+    },
+    {
+      "id": "1759898494910",
+      "date": "2025-10-12T18:30:00.000Z",
+      "category": "UT",
+      "amount": 33,
+      "title": "taddeee"
+    },
+    {
+      "id": "1759898507576",
+      "date": "2025-10-20T18:30:00.000Z",
+      "category": "EN",
+      "amount": 33,
+      "title": "test123"
+    },
+    {
+      "title": "test123",
+      "amount": 234,
+      "category": "TS",
+      "date": "2025-10-19T18:30:00.000Z",
+      "id": "1759901495476"
+    },
+    {
+      "id": "1759901506602",
+      "date": "2025-10-13T18:30:00.000Z",
+      "category": "TS",
+      "amount": 23,
+      "title": "afdddee"
+    },
+    {
+      "id": "1759901521464",
+      "date": "2025-10-12T18:30:00.000Z",
+      "category": "RT",
+      "amount": 3333,
+      "title": "asasfdaf"
+    },
+    {
+      "title": "testttt",
+      "amount": 333,
+      "category": "TS",
+      "date": "2025-10-20T18:30:00.000Z",
+      "id": "1759907738157"
     }
   ]
 }
